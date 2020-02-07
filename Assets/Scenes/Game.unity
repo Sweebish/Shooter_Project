@@ -1467,6 +1467,12 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: -20, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!212 &1742330961 stripped
+SpriteRenderer:
+  m_CorrespondingSourceObject: {fileID: 386120024, guid: b3c83565484ef7b4b8dc92c9eec71035,
+    type: 3}
+  m_PrefabInstance: {fileID: 8876255190085168393}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1863212779
 GameObject:
   m_ObjectHideFlags: 0
@@ -2060,6 +2066,11 @@ PrefabInstance:
       propertyPath: _gameManager
       value: 
       objectReference: {fileID: 338160980}
+    - target: {fileID: 8876255191486543900, guid: b3c83565484ef7b4b8dc92c9eec71035,
+        type: 3}
+      propertyPath: _thrusterAnim
+      value: 
+      objectReference: {fileID: 1742330961}
     - target: {fileID: 8876255191486543901, guid: b3c83565484ef7b4b8dc92c9eec71035,
         type: 3}
       propertyPath: m_Name
