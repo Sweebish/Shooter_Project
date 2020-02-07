@@ -36,14 +36,14 @@ public class SpawnManager : MonoBehaviour
         }
     }
     
-    IEnumerator SpawnTripleShot()
+    IEnumerator SpawnPowerUp()
     {
         yield return new WaitForSeconds(3.0f);
 
         while (_stopSpawning == false)
         {
             Vector3 posToSpawn = new Vector3(Random.Range(-8.0f, 8.0f), 7, 0);
-            int randomPU = Random.Range(0, 3);
+            int randomPU = Random.Range(0, 5);
             Instantiate (_powerups[randomPU], posToSpawn, Quaternion.identity);
             yield return new WaitForSeconds(Random.Range(3, 8));
         }
@@ -60,6 +60,6 @@ public class SpawnManager : MonoBehaviour
     public void AsteroidDeath()
     {
         StartCoroutine(SpawnEnemy());
-        StartCoroutine(SpawnTripleShot());
+        StartCoroutine(SpawnPowerUp());
     }
 }

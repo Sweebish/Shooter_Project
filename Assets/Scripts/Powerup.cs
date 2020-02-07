@@ -49,6 +49,14 @@ public class Powerup : MonoBehaviour
                         Debug.Log("Shields!");
                         player.ShieldActive();
                     break;
+
+                    case 3:
+                        player.AmmoRefill();
+                        break;
+
+                    case 4:
+                        player.RefillHealth();
+                        break;
                 }
                 
             }

@@ -16,14 +16,19 @@ public class UIManager : MonoBehaviour
     [SerializeField]
     private GameObject _restartLevel;
     private GameManager _gameManager;
+    [SerializeField]
+    private Text _ammoCounter;
+    [SerializeField]
+    private Slider _fuelBar;
 
- 
+
     void Start()
     {
         _scoreText.text = "Score: " + 0;
         _gameOver.SetActive(false);
         _gameManager = GameObject.Find("Game_Manager").GetComponent<GameManager>();
-        if(_gameManager == null)
+        _ammoCounter.text = "Ammo: " + 15;
+        if (_gameManager == null)
         {
             Debug.LogError("Game_Manager Failed to Call");
         }
@@ -31,20 +36,36 @@ public class UIManager : MonoBehaviour
 
     void Update()
     {
-        
+
     }
     public void GetScore(int _score)
     {
         _scoreText.text = "Score: " + _score;
     }
+    public void GetAmmo(int _ammo)
+    {
+        _ammoCounter.text = "Ammo: " + _ammo;
+        if (_ammo == 0)
+        {
+            _ammoCounter.color = Color.red;
+        }
+        else if (_ammo > 0)
+        {
+            _ammoCounter.color = Color.white;
+        }
+    }
     public void UpdateLives(int CurrentLives)
     {
         _livesImage.sprite = _liveSprite[CurrentLives];
-        if(CurrentLives < 1)
+        if (CurrentLives < 1)
 
         {
             GameOverHandler();
         }
+    }
+    public void UpdateFuelBar(float _fuel)
+    {
+        _fuelBar.value = _fuel;
     }
     private void GameOverHandler()
     {

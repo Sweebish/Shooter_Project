@@ -23,7 +23,7 @@ public class Player : MonoBehaviour
     [SerializeField]
     private bool _speedUpActive;
     [SerializeField]
-    private bool _shieldActive;
+    private int _shieldActive;
     [SerializeField]
     private GameObject _playerShield;
     [SerializeField]
@@ -35,16 +35,29 @@ public class Player : MonoBehaviour
     [SerializeField]
     private Renderer _leftEngine;
     [SerializeField]
-    private Renderer _thruster;
+    private Renderer _thrusterAnim;
     [SerializeField]
     private AudioSource _laserSound;
     private AudioSource _powerUpSound;
+    private SpriteRenderer _playerShieldColor;
+    [SerializeField]
+    private int _ammoCounter = 15;
+    [SerializeField]
+    private GameObject _healthPowerup;
+    [SerializeField]
+    private GameManager _gameManager;
+    [SerializeField]
+    private Camera _camera;
+    [SerializeField]
+    private float _fuel = 3f;
+    private bool _thrusters;
 
     
 
     void PlayerMovement()
     {
-        if(_speedUpActive == false)
+
+        if (_speedUpActive == false)
         {
             _speed = 10f;
         }
@@ -52,11 +65,25 @@ public class Player : MonoBehaviour
         {
             _speed = 15f;
         }
+        if (Input.GetKey(KeyCode.LeftShift) && _fuel > 0f)
+        {
+            _thrusters = true;
+            ThrustersActive();
+
+        }
         float h = Input.GetAxis("Horizontal");
         float v = Input.GetAxis("Vertical");
         transform.Translate(Vector3.up * _speed * Time.deltaTime * v);
         transform.Translate(Vector3.right * _speed * Time.deltaTime * h);
 
+    }
+    void ThrustersActive()
+    {
+        if(_thrusters == true)
+        {
+            _speed = _speed * 2;
+            StartCoroutine("_ThrusterFuel");
+        }
     }
     void PlayerBounds()
     {
@@ -83,6 +110,8 @@ public class Player : MonoBehaviour
         Vector3 offset = new Vector3(0, 1.05f, 0);
         {
             _canFire = Time.time + _fireRate;
+            _ammoCounter--;
+            _uiManager.GetAmmo(_ammoCounter);
             if (_tripleShotActive == true)
             {
                 Instantiate(_tripleshot, transform.position, Quaternion.identity);
@@ -93,23 +122,44 @@ public class Player : MonoBehaviour
             }
         }
     }
+    public void CameraShake()
+    {
+        StartCoroutine("_Shaker");
+    }
     public void Damage()
     {
-        if(_shieldActive == true)
+        if(_shieldActive > 0)
         {
-            _playerShield.SetActive(false);
-            _shieldActive = false;
+            switch(_shieldActive)
+            { 
+            case 3:
+                _shieldActive--;
+                    _playerShieldColor.color = Color.green;
+                break;
+            case 2:
+                _shieldActive--;
+                _playerShieldColor.color = Color.red;
+                break;
+            case 1:
+                _shieldActive--;
+                _playerShield.SetActive(false);
+                break;
+            }
             return;
         }
+
         _lives -= 1;
+        CameraShake();
+        //_gameManager.ShakeCamera();
         _uiManager.UpdateLives(_lives);
+
         if (_lives < 1)
         {
             _spawnManager.OnplayerDeath();
             _leftEngine.enabled = false;
             _rightEngine.enabled = false;
             _playerSprite.enabled = false;
-            _thruster.enabled = false;
+            _thrusterAnim.enabled = false;
         }
         switch(_lives)
         {
@@ -118,6 +168,7 @@ public class Player : MonoBehaviour
                 break;
             case 1:
                 _leftEngine.enabled = true;
+                _rightEngine.enabled = true;
                 break;
         }
     }
@@ -136,13 +187,37 @@ public class Player : MonoBehaviour
     public void ShieldActive()
     {
         _playerShield.SetActive(true);
+        _playerShieldColor.color = Color.white;
         _powerUpSound.Play();
-        _shieldActive = true;
+        _shieldActive = 3;
     }
     public void ScoreUpdate(int points)
     {
         _score += points;
         _uiManager.GetScore(_score);
+    }
+    public void AmmoRefill()
+    {
+        _ammoCounter += 5;
+        _powerUpSound.Play();
+        _uiManager.GetAmmo(_ammoCounter);
+    }
+    public void RefillHealth()
+    {
+        if(_lives < 3)
+        {
+            _lives++;
+            _powerUpSound.Play();
+            _uiManager.UpdateLives(_lives);
+        }
+        if(_rightEngine.enabled == true && _lives == 3)
+        {
+            _rightEngine.enabled = false;
+        }
+        if(_leftEngine.enabled == true && _lives == 2)
+        {
+            _leftEngine.enabled = false;
+        }
     }
     // Start is called before the first frame update
     void Start()
@@ -150,6 +225,12 @@ public class Player : MonoBehaviour
         _uiManager = GameObject.Find("Canvas").GetComponent<UIManager>();
         _spawnManager = GameObject.Find("Spawn_Manager").GetComponent<SpawnManager>();
         _powerUpSound = GetComponent<AudioSource>();
+        _playerShieldColor = _playerShield.GetComponent<SpriteRenderer>();
+        
+        if(_playerShieldColor == null)
+        {
+            Debug.LogError("_playerShieldColor failed to call");
+        }
         if (_spawnManager == null)
         {
             Debug.LogError("SpawnManager Failed to Call");
@@ -165,7 +246,7 @@ public class Player : MonoBehaviour
     {
         PlayerMovement();
         PlayerBounds();
-        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire)
+        if (Input.GetKeyDown(KeyCode.Space) && Time.time > _canFire && _ammoCounter > 0)
         {
             FireLaser();
             _laserSound.Play();
@@ -182,5 +263,38 @@ public class Player : MonoBehaviour
     {
         yield return new WaitForSeconds(5.0f);
         _speedUpActive = false;
+    }
+    IEnumerator _Shaker()
+    {
+        float i;
+        Vector3 _originalPos = new Vector3(0, 0, -10);
+
+        for (i = 5; i > 0f; i--)
+        {
+            float x = Random.Range(-0.5f, 0.5f);
+            float y = Random.Range(-0.5f, 0.5f);
+            float z = _camera.transform.position.z;
+            _camera.transform.position = new Vector3(x, y, z);
+            yield return new WaitForSeconds(0.1f);
+            Debug.Log("frame" + i + " X=" + _camera.transform.position.x + " Y=" + _camera.transform.position.y);
+        }
+        _camera.transform.position = _originalPos;
+        Debug.Log("return to center");
+    }
+    IEnumerator _ThrusterFuel()
+    {
+        for (_fuel = 3f; _fuel >= 0f; _fuel--)
+        {
+            _uiManager.UpdateFuelBar(_fuel);
+            yield return new WaitForSeconds(1);
+        }
+        if(_fuel <= 0f)
+        {
+            _fuel = 0;
+            _thrusters = false;
+            yield return new WaitForSeconds(10);
+            _fuel = 3f;
+            _uiManager.UpdateFuelBar(_fuel);
+        }
     }
 }
